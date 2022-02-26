@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!-- pacman.html A document for pacman.js -->
+<html lang = "en">
+<head>
+  <title> pacman.html </title>
+  <meta charset = "utf-8" />
+  <script type="text/javascript">
+    // pacman.js
+    // This script illustrates the use of the methods for drawing circles.
+    //new code by Matt McCullough
+    "use strict";
+    var closedNow = false;
+    var rotationAngle = 0; //90 degrees in radians is PI/2
+
+    function draw ( ) {
+      console.log( 'draw ' + closedNow );
+      var dom = document.getElementById( "myCanvas" );
+      if (dom.getContext) {
+         var context = dom.getContext( '2d' );
+         context.beginPath();
+         context.fillStyle = 'yellow'; //doesn't feel right without Pac-Man being yellow
+         context.strokeStyle = 'black'; //give him a black outline
+         if (closedNow) {
+           // Draw the inner filled circle
+           context.arc( 500, 200, 50, 0, 2 * Math.PI, false );
+         }
+         else {
+           // Draw Pac-Man open
+           context.clearRect(0, 0, context.canvas.width, context.canvas.height) //clear the context for redrawing
+           context.arc( 500, 200, 50, (Math.PI/7) + rotationAngle, (-Math.PI/7) + rotationAngle, false );
+           context.lineTo( 500, 200 );
+        }
+        context.fill();
+        context.stroke();
+        closedNow = !closedNow;
+      }
+    }
+  </script>
+</head>
+<body onload="draw();">
+  <button id = "chomp" name = "Chomp" onclick="draw();">Chomp</button>
+  <button id = "rotateMinus" name = "rotateMinus" onclick="closedNow = !closedNow; rotationAngle-=Math.PI/2; draw();">Rotate 90 Degrees Counterclockwise</button>
+  <button id = "rotate" name = "rotate" onclick="closedNow = !closedNow; rotationAngle+=Math.PI/2; draw();">Rotate 90 Degrees Clockwise</button>
+  <canvas id="myCanvas" width="800" height="600">
+  </canvas>
+</body>
+</html>

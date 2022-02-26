@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> PAC-MAN by Matt McCullough</title>
+        <script type="text/javascript" src="model.js">       </script>
+        <script type="text/javascript" src="view.js" >       </script>
+    </head>
+
+    <body style="background-color:black;" onresize="paint();" onload="g.score = 0; g.lives = 3; g.reset(); paint();" >
+        <!-- canvas is in a div so i can stop it from being selected via double clicks. -->
+        <div id="canvasDiv">
+            <canvas id="can" width="800" height="800">
+                Sorry, canvas tag not supported.
+            </canvas>
+        </div>
+
+        <!-- images for the game view.js uses these elements to load them in the game -->
+        <div style="display:none;">
+        <img id="ghost" src="ghost.png">
+        </div>
+
+        <div style="display:none;">
+        <img id="weakghost" src="ghostweak.png">
+        </div>
+
+        <div style="display:none;">
+        <img id="fruit" src="fruit.png">
+        </div>
+
+        <hr /> <div id="boardDiv"> </div>
+
+        <script type="text/javascript">
+            //disallow the canvas from being selected (had to put it in a div)
+            document.getElementById( "canvasDiv" ).disabled = true;
+            var g = new PACMAN( 20, 20 );
+
+            document.addEventListener('keydown', (e) => {
+            if (e.keyCode == 87 || e.keyCode == 38)  {
+                g.direction = 1;
+            }
+            if (e.keyCode == 83 || e.keyCode == 40)  {
+                g.direction = 2;
+            }
+            if (e.keyCode == 65 || e.keyCode == 37)  {
+                g.direction = 3;
+            }
+            if (e.keyCode == 68 || e.keyCode == 39)  {
+                g.direction = 4;
+            }
+            if (e.keyCode == 80)  {
+                g.paused = !g.paused;
+                g.pauseGame();
+            }
+            if (e.keyCode == 82)  {
+                g.score = 0;
+                g.lives = 3;
+                g.reset();
+                paint();
+            }
+          });
+
+        </script>
+
+        <button id = "start" name = "start" onclick="g.score = 0; g.lives = 3; g.reset(); paint();">Start New Game</button>
+        <textarea style="background-color: black; color:#ffffff; resize: none;" readonly id="scoreAndLivesInfo">Score: 0 Lives: 3</textarea>
+
+        <button id = "customColor" onclick="g.customPacmanColor();">Set Custom Pacman Color</button>
+
+        <input type="range" min="0" max="100" value="0" class="slider" id="volume">
+        <textarea style="background-color: black; color:#ffffff; resize: none;" readonly id="volumeValue">0% Volume</textarea>
+
+    </body>
+</html>

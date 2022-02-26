@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Conway's Game of Life </title>
+
+        <script type="text/javascript" src="model.js">       </script>
+        <script type="text/javascript" src="view.js" >       </script>
+        <script type="text/javascript" src="controller.js" > </script>
+    </head>
+
+    <body onresize="paint();" onload="paint();" >
+        <!-- canvas is in a div so i can stop it from being selected via double clicks. -->
+        <div id="canvasDiv">
+            <canvas id="can" width="800" height="600">
+                Sorry, canvas tag not supported.
+            </canvas>
+        </div>
+
+        <hr /> <div id="boardDiv"> </div>
+
+        <script type="text/javascript">
+            //disallow the canvas from being selected (had to put it in a div)
+            document.getElementById( "canvasDiv" ).disabled = true;
+
+            var g = new ConwaysGameOfLife( 30, 30 );
+            initController();
+        </script>
+
+        <button id = "next" name = "Next" onclick="g.nextGeneration(); paint();">Next Generation</button>
+        <button id = "random" name = "Random" onclick="g.initializeBoard(this.id); paint();">Random</button>
+        <button id = "reset" name = "Reset" onclick="g.initializeBoard(this.id); paint();">Reset</button>
+
+    </body>
+</html>
