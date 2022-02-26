@@ -1,0 +1,56 @@
+Charlie Brown
+ Two point percent: 0.43989071038251365
+ Three point percent: 0.37857142857142856
+ Foul shot percent: 0.8429752066115702
+Jared Bynum
+ Two point percent: 0.3991769547325103
+ Three point percent: 0.34146341463414637
+ Foul shot percent: 0.6914893617021277
+Lamarr Kimble
+ Two point percent: 0.419811320754717
+ Three point percent: 0.30526315789473685
+ Foul shot percent: 0.7714285714285715
+Taylor Funk
+ Two point percent: 0.37037037037037035
+ Three point percent: 0.3161764705882353
+ Foul shot percent: 0.7142857142857143
+Chris Clover
+ Two point percent: 0.3767123287671233
+ Three point percent: 0.2903225806451613
+ Foul shot percent: 0.7407407407407407
+Lorenzo Edwards
+ Two point percent: 0.4155844155844156
+ Three point percent: 0.3333333333333333
+ Foul shot percent: 0.6666666666666666
+Anthony Longpre
+ Two point percent: 0.3787878787878788
+ Three point percent: 0.4117647058823529
+ Foul shot percent: 0.7222222222222222
+Troy Holston
+ Two point percent: 0.35
+ Three point percent: 0.2926829268292683
+ Foul shot percent: 0.5
+Pierfrancesco Oliva
+ Two point percent: 0.37209302325581395
+ Three point percent: 0.09090909090909091
+ Foul shot percent: 0.5
+Markell Lodge
+ Two point percent: 0.6363636363636364
+ Three point percent: 0.0
+ Foul shot percent: 0.5
+Toliver Freeman
+ Two point percent: 0.6
+ Three point percent: 0.5
+ Foul shot percent: 0.6666666666666666
+Greg Smith
+ Two point percent: 0.0
+ Three point percent: 0.0
+ Foul shot percent: 0.0
+Mike Muggeo
+ Two point percent: 0.0
+ Three point percent: 0.0
+ Foul shot percent: 0.0
+The total points of the team is: 2169
+The two point percent is: 40.899795501022496
+The three point percent is: 33.026113671274956
+The foul shot percent is: 73.13769751693002

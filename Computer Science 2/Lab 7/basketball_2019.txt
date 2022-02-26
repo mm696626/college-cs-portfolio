@@ -1,0 +1,13 @@
+2 Brown Charlie 161 366 53 140 102 121
+00 Kimble Lamarr 89 212 29 95 54 70
+3 Bynum Jared 97 243 28 82 65 94
+33 Funk Taylor 80 216 43 136 15 21
+15 Clover Chris 55 146 18 62 40 54
+21 Edwards Lorenzo 32 77 16 48 8 12
+12 Longpre  Anthony 25 66 14 34 13 18
+24 Oliva Pierfrancesco 16 43 1 11 15 30
+10 Holston Troy 21 60 12 41 2 4
+23 Lodge Markell 21 33 0 0 8 16
+11 Freeman Toliver 3 5 1 2 2 3
+5 Smith Greg 1 0 0 0 0 0
+20 Muggeo Mike 4 0 0 0 0 0
