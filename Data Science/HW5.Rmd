@@ -1,0 +1,392 @@
+# MAT 325 Essentials of Data Science
+### Matt McCullough
+### Homework 5 (Due: December 1, 2021)
+
+**Note:** *Insert blocks of R code and answers to the questions below. Answers in text should be displayed in italics.*
+
+**(1) (5 pts)** Write a block of R code that loads the libraries ggplot2, dplyr, class, caret and ModelMetrics and implements any R functions needed to answer the questions below.
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(class)
+library(caret)
+library(ModelMetrics)
+
+# Normalization function
+# Input: vector x
+# Output: normalized vector
+nor <- function(x) { 
+  return( (x -min(x))/(max(x)-min(x)) )   
+}
+
+# This function calculates the accuracy of a 
+# learning algorithm
+accuracy <- function(T){
+    return (sum(diag(T)/(sum(rowSums(T)))) * 100)
+}
+```
+
+&nbsp;
+
+**(2). (30 pts total)** *Environmental Science and Technology* (January 2005) reported on a study of the reliability of a commercial kit to test for arsenic in groundwater. The field kit was used to test a sample of 328 groundwater wells in Bangladesh. In addition to the arsenic level (micrograms per liter), the latitude (degrees), longitude (degrees), and depth (feet) of each well was measured. The data are saved in the ASWELLS.Rdata file. We wish to fit a first-order model for arsenic level as a function of latitude, longitude, and depth.
+
+**(a). (3 pts)** Write a first-order model for arsenic level ($y$) as a function of latitude ($x_1$), longitude ($x_2$), and depth ($x_3$). (This is just the functional form relating $y$ to the predictor variables that involves unspecified $\beta$ coefficients.)
+
+**First Order Model:** *y = β~0~ + β~1~x~1~ + β~2~x~2~ + β~3~x~3~*
+
+&nbsp;
+
+**(b). (5 pts)** Load the ASWELLS data set and perform linear regression using the first order model in (a). Show the R code and the output of the *summary* function.
+
+```{r}
+arsenic = load("ASWELLS.Rdata")
+y=ASWELLS$ARSENIC
+x1=ASWELLS$LATITUDE
+x2=ASWELLS$LONGITUDE
+x3=ASWELLS$DEPTHFT
+m=lm(y~x1+x2+x3)
+summary(m)
+```
+
+&nbsp;
+
+**(c). (3 pts)** Write the least squares prediction equation for arsenic level obtained from the regression output.
+```{r}
+m
+```
+*The line would be y = -86870 - 2219$x_1$ + 1542$x_2$ - 0.3496$x_3$*
+
+&nbsp;
+
+**(d). (5 pts)** Would it be appropriate to interpret the estimate of the coefficient of the depth variable in the model? Why or why not? If so, give a practical interpretation.
+
+*Yes,  it would be appropriate to interpret the estimate of the coefficient of the depth variable in the model as it is a linear model.*
+<br>
+*A practical interpretation of this is that for every decrease of one foot of the depth of each well, the arsenic level decreases by 0.3496 micrograms per liter*
+
+&nbsp;
+
+**(e). (3 pts)** Find the model standard deviation, $s$, and interpret its value.
+
+*$s$ is 103.3 and it's value says that 95% of the data lies within 2$s$, or 206.6*
+
+&nbsp;
+
+**(f). (4 pts)** What are the $R^2$ and the $R_a^2$ values? Interpret both values.
+
+*$R^2$ is 0.128 and $R_a^2$ is 0.1199. $R^2$ represents the fact that 12.8% of the variability of the arsenic level is explained by the regression line and the $R_a^2$ represents an adjusted $R^2$ and that 11.99% of the variability is explained by the regression line*
+
+&nbsp;
+
+**(g). (5 pts)** Conduct a test of overall model utility (the global F-test)  at the $\alpha = 0.05$ level. State the hypotheses, write the value of the test statistic, write the P-value, and state the conclusion.
+
+*Hypothesis: H~0~ : β~1~ + β~2~ + β~3~ vs. H~a~: at least one B~k~ ≠ 0*
+<br>
+*F Statistic: 15.8*
+<br>
+*P value: 1.308 x 10^-9* 
+<br>
+*Conclusion: Given this information there is evidence to reject the null hypothesis as $\alpha < 0.05$*
+
+&nbsp;
+
+**(h). (2 pts)** Based on the results, parts (d)--(f), would you recommend using the model to predict arsenic level ($y$)? Explain.
+
+*Based on these results, I would not use this to predict arsenic level since the $R^2$ value is low and that one of the coefficients is not 0 given the hypothesis test*
+
+&nbsp;
+
+**(3). (5 pts)** For this exercise, we will use the diamonds data set from the ggplot2 library. First, set the random seed to some integer between 1 and 1000 to ensure replicability of the results. Next, create a smaller data set by randomly selecting 10% of the rows of the diamonds data set and then choosing only the columns corresponding to the following variables (in this order): cut, price, carat, depth, table, x, y, and z. The descriptions of these variables can be found by typing "?diamonds" on the console.
+
+**Important Note:** The diamonds data set is an example of a tibble, which differs slightly from a data frame. Use the *as.data.frame* function to ensure that the resulting data set is a data frame before applying the knn function.
+
+```{r}
+#I used 5% of the data because my computer is slow
+
+set.seed(1)
+diamondData = diamonds[,c("cut", "price", "carat", "depth", "table", "x", "y", "z")]
+set = sample(1:nrow(diamondData), floor(.05 * nrow(diamondData)))
+
+subsetDiamond = as.data.frame(diamondData[set,])
+
+```
+
+&nbsp;
+
+**(4). (25 pts total)** For this exercise, use the subset of the diamonds data set from (3). The goal is to develop models that can predict the *quality of the cut* of a diamond (Fair, Good, Very Good, Premium, Ideal) based on the quantitative variables in the data set, namely, the *price, carat, depth, table, x, y*, and *z*. Use k-NN to predict the quality of the cut of a diamond based on the above quantitative variables.
+
+**(a). (10 pts)** Split the data set into 90% training set and 10% test set. Determine the accuracy of k-NN on the training set for $k=1$ to 30. Determine also the accuracy of kNN on the test set for $k=1$ to 30. Show the plot of the accuracy on the training set vs. k and the plot of the accuracy on the test set vs k on the same graph. Provide the R code below.
+
+```{r}
+# normalize first columns that are not cut (these correspond to 
+# the predictors)
+diamond_norm <- as.data.frame(lapply(subsetDiamond[,2:8], nor))
+
+# set random seed
+set.seed(1)
+
+# Randomly select 90% of the data
+ran <- sample(1:nrow(subsetDiamond), floor(0.9 * nrow(subsetDiamond))) 
+
+# extract training set
+diamond_train <- diamond_norm[ran,] 
+
+# extract testing set
+diamond_test <- diamond_norm[-ran,] 
+
+#get cut for category
+diamond_train_category <- subsetDiamond[ran,1]
+diamond_test_category <- subsetDiamond[-ran,1]
+
+numk <- 30
+AccuracyTestVec <- numeric(numk)
+AccuracyTrainVec <- numeric(numk)
+
+for (k in 1:numk)
+{
+    #test set
+  
+    # run knn function
+    pr <- knn(diamond_train,diamond_test,
+              cl=diamond_train_category,k)
+    
+    # create confusion matrix
+    tab <- table(pr,diamond_test_category)
+    
+    # calculate the accuracy
+    AccuracyTestVec[k] = accuracy(tab)
+    
+    #training set
+    
+    # run knn function
+    pr <- knn(diamond_train,diamond_train,
+              cl=diamond_train_category,k)
+    
+    # create confusion matrix
+    tab <- table(pr,diamond_train_category)
+    
+    # calculate the accuracy
+    AccuracyTrainVec[k] = accuracy(tab)
+}
+
+
+# plot accuracy of Training Set vs k
+plot(1:numk,AccuracyTrainVec,type="l",col="green",
+     lty=1,pch=19,ylim = c(0,100),xlab="k",ylab="Accuracy")
+# plot accuracy of Test Set vs k (superimposed on previous plot)
+lines(1:numk,AccuracyTestVec,type="l",col="red",lty=1,pch=19)
+legend(22,20,legend=c('Train Set','Test Set'),col=c('green','red'),lty=1)
+
+```
+
+&nbsp;
+
+**(b). (5 pts)** What can you say about the plot of k-NN accuracy on the training set vs k? What about the plot of k-NN accuracy on the test set vs k? Are the results consistent with what are expected? Based on these plots, what would be your recommended value of $k$ for this data set?
+
+*I can say that the accuracy of the training set goes from 100% to quickly drop to the high 60%'s and the accuracy of the test set does the opposite where it increases from around 60% to 70%. This is what I expected to happen and are consistent with what is expected. Given this data, my recommended value for $k$ would be 9 as it's the first substantial increase in the test set accuracy, which would yield a smaller $k$ value with relatively good accuracy*
+
+&nbsp;
+
+**(c). (10 pts)** Write an R script containing R functions that calculate the LOOCV performance (accuracy) of k-NN for $k=1$ to 30 on your data set from (3). What value of $k$ would be suitable for this data set? Show the R script you used below and the output obtained.
+
+
+```{r}
+
+# This function calculates the accuracy in LOOCV for a fixed k
+kNN_LOOCV_Accuracy <- function(k) {
+  
+  # normalize the predictors
+  diamond_norm <- as.data.frame(lapply(subsetDiamond[,2:8], nor))
+  
+  # number of data points
+  numdata <- nrow(diamond_norm)
+  
+  # number of correct predictions
+  numcorrect <- 0
+  
+  for (i in 1:numdata) {
+    
+    # extract training set
+    diamond_train <- diamond_norm[-i,]
+    
+    # extract testing set
+    diamond_test <- diamond_norm[i,] 
+    
+    # extract column of training set (to be used 
+    # as 'cl' argument in the knn function)
+    diamond_train_category <- subsetDiamond[-i,1]
+    
+    # extract column of test set (to be used for 
+    # measuring the accuracy)
+    diamond_test_category <- subsetDiamond[i,1]
+    
+    # run knn function
+    pr <- knn(diamond_train,diamond_test,
+              cl=diamond_train_category,k)
+    
+    testY <- diamond_test_category[1]
+    testY<-factor(testY, ordered=FALSE)
+    
+    if (pr[1]==testY) {
+      numcorrect <- numcorrect+1
+    }  
+  
+  }
+  print(paste('Number of correct predictions: ',
+              numcorrect))
+  accuracy <- numcorrect/numdata
+  return(accuracy)
+  
+}
+
+# This function returns the LOOCV accuracy of k-NN 
+# for many values of k and chooses the smallest k 
+# that gives maximum accuracy
+Choosek <- function() {
+  numdata <- nrow(subsetDiamond)
+  numk <- 30  # max value of k to consider
+  AccuracyVec <- integer(numk)
+  for (k in 1:numk) {
+    AccuracyVec[k] <- kNN_LOOCV_Accuracy(k)
+  }
+  k_best <- which.max(AccuracyVec)
+  print(paste('The best accuracy is ',max(AccuracyVec),' at k =',k_best))
+  print(paste('Accuracy of k-NN for k = 1 to ',numk,':'))
+  return(AccuracyVec)
+}
+
+Choosek()
+```
+
+
+&nbsp;
+
+**(5). (15 pts total)** We use the same data set as in (4) but this time we will use k-NN to predict the price of a diamond based on the variables carat, depth, table, x, y, and z. (Note: There is no need to modify the data frame from (4). Simply extract the columns that are needed by the knnreg function.)
+
+
+**(a). (10 pts)** Split the data set into 90% training set and 10% test set. Determine the RMSE (root mean square error) of k-NN regression on the training set for $k=1$ to 20. Determine also the RMSE of k-NN regression on the test set for $k=1$ to 20. Show the plot of the RMSE on the training set vs k and the plot of the RMSE on the test set vs k on the same graph. Provide the R code below.
+
+```{r}
+# normalize first columns that are not cut and price (these correspond to 
+# the predictors)
+diamond_norm <- as.data.frame(lapply(subsetDiamond[,3:8], nor))
+
+# set random seed
+set.seed(1)
+
+# Randomly select 90% of the data
+ran <- sample(1:nrow(subsetDiamond), floor(0.9 * nrow(subsetDiamond))) 
+
+# extract training set
+diamond_trainX <- diamond_norm[ran,] 
+diamond_trainY <- subsetDiamond[ran,2]
+
+
+# extract testing set
+diamond_testX <- diamond_norm[-ran,] 
+diamond_testY <- subsetDiamond[-ran,2] 
+
+# plot kNN RMSE vs k
+numk <- 20 # number of values of k to consider
+kvalues <- 1:numk
+
+# calculate RMSE on the training set for 
+# different values of k
+RMSETrainSet <- numeric(numk)
+for (k in 1:numk) {
+  
+  # run knnreg function
+  fit <- knnreg(diamond_trainX, diamond_trainY, k)
+  
+  # predict on training set
+  diamond_pred <- predict(fit, diamond_trainX)
+  
+  # calculate rmse
+  RMSETrainSet[k] <- rmse(diamond_trainY,diamond_pred)
+  
+}
+
+
+# calculate RMSE on the test set for 
+# different values of k
+RMSETestSet <- numeric(numk)
+for (k in 1:numk) {
+  
+  # run knnreg function
+  fit <- knnreg(diamond_trainX, diamond_trainY, k)
+  
+  # predict on test set
+  diamond_pred <- predict(fit, diamond_testX)
+
+  # calculate rmse
+  RMSETestSet[k] <- rmse(diamond_testY,diamond_pred)
+  
+}
+
+# plot RMSE on Training Set vs k
+plot(1:numk,RMSETrainSet,type="b",col="green",
+     lty=1,pch=19,ylim = c(0,2000),xlab="k",ylab="RMSE")
+# plot RMSE on Test Set vs k (superimposed on previous plot)
+lines(1:numk,RMSETestSet,type="b",col="red",lty=1,pch=19)
+legend(15,500,legend=c('Train Set','Test Set'),col=c('green','red'),lty=1)
+
+
+```
+
+&nbsp;
+
+**(b). (5 pts)** What can you say about the plot of RMSE on the training set vs k? What about the plot of RMSE on the test set vs k? Are the results consistent with what are expected? Based on these plots, What would be your recommended value of $k$ for this data set?
+
+*I would say that is what was expected as the training set started near 0 and spiked while the test set stayed consistent. I would use the value 9 for $k$ as it's the smallest value of $k$ when the test set RMSE dips*
+
+&nbsp;
+
+**(c). (Extra Credit) (10 pts)** Write an R script containing R functions that calculate the LOOCV performance (RMSE) of k-NN for $k=1$ to 30 on the data set. What value of $k$ would be suitable for this data set? Show the R code and the output you obtained below.
+
+
+```{r}
+# normalize first columns that are not cut and price (these correspond to 
+# the predictors)
+diamond_norm <- as.data.frame(lapply(subsetDiamond[,3:8], nor))
+
+# set random seed
+set.seed(1)
+
+# Randomly select 90% of the data
+ran <- sample(1:nrow(subsetDiamond), floor(0.9 * nrow(subsetDiamond))) 
+
+# extract training set
+diamond_trainX <- diamond_norm[ran,] 
+diamond_trainY <- subsetDiamond[ran,2]
+
+
+# extract testing set
+diamond_testX <- diamond_norm[-ran,] 
+diamond_testY <- subsetDiamond[-ran,2] 
+
+# plot kNN RMSE vs k
+numk <- 30 # number of values of k to consider
+kvalues <- 1:numk
+
+# calculate RMSE on the test set for 
+# different values of k
+RMSETestSet <- numeric(numk)
+for (k in 1:numk) {
+  
+  # run knnreg function
+  fit <- knnreg(diamond_trainX, diamond_trainY, k)
+  
+  # predict on test set
+  diamond_pred <- predict(fit, diamond_testX)
+
+  # calculate rmse
+  RMSETestSet[k] <- rmse(diamond_testY,diamond_pred)
+  
+  print(paste('RMSE: ',RMSETestSet[k]))
+  
+}
+
+k_best <- which.min(RMSETestSet)
+print(paste('The best RMSE is ',min(RMSETestSet),' at k =',k_best))
+```

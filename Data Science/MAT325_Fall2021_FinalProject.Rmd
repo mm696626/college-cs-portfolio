@@ -1,0 +1,391 @@
+# MAT 325 Essentials of Data Science
+### Final Project (in lieu of a traditional 2 hour final examination)
+### Due: December 16, 2021
+### Matt McCullough and Andy Mac
+
+**Note:** *Insert blocks of R code and answers to the questions below. Answers in text should be displayed in italics.*
+
+**Objective:** The objective of this project is to use the statistical and machine learning methods we learned this semester to model the relationship between a quantitative dependent (response or target) variable and several independent (explanatory or input) variables. Each group will work on a data set, and perform an analysis using R by following the guidelines below. Then, use this markdown file to prepare a report with the R scripts, outputs and graphs (at most 15 pages) you used to answer the questions below. Please submit three files: the data set, the updated version of this markdown (rmd) file, and a pdf rendering of the rmd file.
+
+&nbsp;
+
+**Part I.** Write a block of R code that loads the libraries and implements any helper functions needed to answer the questions below.
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(class)
+library(caret)
+library(ModelMetrics)
+library(neuralnet)
+library(tree)
+library(Stat2Data)
+
+# Normalization function
+# Input: vector x
+# Output: normalized vector
+nor <- function(x) { 
+  return( (x -min(x))/(max(x)-min(x)) )   
+}
+
+# This function calculates the accuracy of a 
+# learning algorithm
+accuracy <- function(T){
+    return (sum(diag(T)/(sum(rowSums(T)))) * 100)
+}
+
+# function to transform [0,1] to original scale
+origscale <-function(x, xmin, xmax) {
+  return( xmin + x*(xmax - xmin) )
+}
+```
+&nbsp;
+
+**Part II.** Choose a data set suitable for a regression task that we have not used in class and that other groups are not using. Please send me the data set you plan to use (original version) by Dec 13 (Monday). Each data set must have at least 3 quantitative independent variables and at least 50 data points. 
+
+Write one or two paragraphs below that describe your data set and indicate which variable you are trying to predict and what variables you are using as predictors. Please make sure you provide the source or link to your data set.
+
+*The data set we used is the First Year GPA data set located in the Stat2Data R package. The goal of the data set is to predict first year college GPA through three quantitative predictors: High School GPA (ranges from 0.0 - 4.0), SAT Verbal scores (ranges from 0 - 800), and SAT Math scores (ranges from 0 - 800). This will be accomplished by using the sample of 219 first year college students* 
+
+&nbsp;
+
+Please use any data wrangling methods you need to prepare your data set to a form that is ready for analysis. Insert the block of R code below.
+
+```{r}
+data(FirstYearGPA)
+gpaData = FirstYearGPA[,c("GPA", "HSGPA", "SATV", "SATM")]
+gpaData = na.omit(gpaData)
+```
+
+&nbsp;
+
+**Part III.** Perform Multiple Linear Regression on the Data Set
+
+**(a)** Use ggplot package in R to construct scatterplots relating $y$ to each of *at least three* of your quantitative explanatory variables $x_1,\ldots,x_k$.
+
+```{r}
+ggplot(data = gpaData) + 
+  geom_point(mapping = aes(x = HSGPA, y = GPA))
+ggplot(data = gpaData) + 
+  geom_point(mapping = aes(x = SATV, y = GPA))
+ggplot(data = gpaData) + 
+  geom_point(mapping = aes(x = SATM, y = GPA))
+
+```
+
+&nbsp;
+
+**(b)** Use R to fit a first-order linear regression model of your dependent variable $y$ as a function of *at least three* of the quantitative explanatory variables you used in (a). Attach the output of the summary and anova commands, and give the least-squares prediction equation.
+
+```{r}
+y=gpaData$GPA
+x1=gpaData$HSGPA
+x2=gpaData$SATV
+x3=gpaData$SATM
+m=lm(y~x1+x2+x3)
+summary(m)
+anova(m)
+```
+
+*Least Squares Regression Line: y = 0.5877912 + 0.4962319$x_1$ + 0.0011595$x_2$ + 0.0001473$x_3$ + ε*
+
+&nbsp;
+
+**(c)** Give a practical interpretation of the estimate of the coefficients of the explanatory variables in your model, if appropriate.
+
+**B0 = 0.5877912**
+<br>
+*This is the intercept for the first year college GPA of a student who has a 0.0 for high school GPA, verb SAT score, and math SAT score.*
+<br>
+**B1 =  0.4962319**
+<br>
+*When high school GPA increase by 1, assuming the verbal SAT score and math SAT score stay the same. The first year GPA increases on average by 0.4962319*
+<br>
+**B2 = 0.0011595**
+<br>
+*When verbal SAT score increases by 1, assuming the  high school GPA and math SAT score stay the same. The first year GPA increases on average by 0.0011595*
+<br>
+**B3 = 0.0001473**
+<br>
+*When math SAT score increases by 1, assuming the  high school GPA and verbal SAT score stay the same. The first year GPA increases on average by 0.0001473*
+
+&nbsp;
+
+**(d)** Find the model standard deviation, $s$, and interpret its value. Also, calculate the coefficient of variation (C.V.)
+
+*s is .4069 which means that 95% of the data should lie within 2s or .8138*
+
+```{r}
+cv <- 0.4069 / mean(gpaData$GPA) * 100
+cv
+```
+
+*Using R, we found the C.V. to be 13.14%. In general, we would like this to be around 10% as that is a sign of a preferred data set*
+
+&nbsp;
+
+**(e)** Report and interpret the adjusted $R^2$ values for the model in (b).
+
+*The adjusted $R^2$ value is 0.2359. This value represents an adjusted $R^2$ for both the sample size n and the number of β parameters in the model. The interpretation of this value is that approximately 23.59% of the variation of the First Year College GPA is explained by the regression line.*
+
+
+&nbsp;
+
+**(f)** Conduct a global F-test for overall model adequacy for the model by performing the following steps: (i) state the hypotheses; (ii) provide the value of the test statistic; (iii) provide the p-value and the formula used to calculate it; and (iv) state the conclusion.
+<br>
+*Hypotheses: H0 : β1 = β2 = β3 = 0 vs. Ha : at least 1 βi != 0*
+<br>
+*F statistic: 23.43*
+<br>
+*P value: 3.666e-13*
+<br>
+*Conclusion: Due to the p value being less than .05, we can say that there is strong enough evidence to where we can reject the null hypothesis and say that at least 1 of the independent variables has a relationship with our response variable of first year college GPA due to one of them not being 0*
+
+&nbsp;
+
+**(g)** Conduct tests of significance to determine whether each of the explanatory variables in your first-order model in (b) are statistically useful for predicting $y$.
+
+```{r}
+t.test(gpaData$HSGPA, gpaData$GPA)
+t.test(gpaData$SATV, gpaData$GPA)
+t.test(gpaData$SATM, gpaData$GPA)
+```
+
+*All of the explanatory variables are statistically significant as their p values are very low as they are less than 0.05 and as such are statistically significant at the 0.05 level* 
+
+&nbsp;
+
+**(h)** Use ggplot to create a residual plot for the model. That is, create a scatterplot of the residuals vs the fitted values (or predicted values).
+```{r}
+g<-ggplot(data=gpaData,aes(x=m$fitted.values,y=m$residuals))
+g+geom_point()+geom_abline(intercept=0,slope=0)+xlab("Fitted Values")+
+  ylab("Residuals")+
+  ggtitle("Residual Plot for the First Year Data Set")
+```
+
+&nbsp;
+
+**(i)** Based on the above results,  would you recommend using the model to predict your response variable? Explain.
+
+*Based on the above results, we would recommend this model to predict the response variable given the fact that all three of our predictors show significance and have a generally positive correlation between our predictors and our response variable and given the fact of the C.V. is around 10%, and the fact that our r^2 value is fairly low at 23.59% with could be better with more predictors, but given the decent C.V. and significance test, it's safe to say we would recommend this model*
+
+&nbsp;
+
+**Part IV.** (Comparison of Linear Regression and Machine Learning Methods on the Data Set) Split your data set into a training set and a test set and compare the RMSE (root mean square error) of the following models on the test set. Use either 10% or 20% of the data for the test set. Using the quantitative input variables you used in Part III, report the RMSE of the following models on the test set and summarize in a table below. Determine which methods perform well on the test set. Provide the R scripts below.
+
+$\bullet$ First-order multiple linear regression model.
+
+```{r}
+#we already have a first order multiple linear regression model, so we just need to find RMSE of it
+
+RSS <- c(crossprod(m$residuals))
+MSE <- RSS / length(m$residuals)
+RMSE <- sqrt(MSE)
+
+RMSE
+```
+
+&nbsp;
+
+$\bullet$ Second-order multiple linear regression model.
+
+```{r}
+reg <- lm(formula = GPA ~ HSGPA +
+SATV + SATM + I(HSGPA*SATV) + I(HSGPA*SATM) + I(SATM*SATV) + I(HSGPA^2) + I(SATV^2) + I(SATM^2), gpaData)
+
+RSS <- c(crossprod(reg$residuals))
+MSE <- RSS / length(reg$residuals)
+RMSE <- sqrt(MSE)
+
+RMSE
+
+```
+
+&nbsp;
+
+$\bullet$ k-NN with at least ten different values of $k$ (include $k=1,3,5$).
+
+```{r}
+# normalize 3 columns of dataset (these 
+# correspond to the predictors)
+gpa_norm <- as.data.frame(lapply(gpaData[,2:4], nor))
+
+# set random seed
+set.seed(1) 
+
+# Randomly select 90% of the indices (rows) of the 
+# dataset. This will be the indices of the training set
+inTrain <- sample(1:nrow(gpaData), floor(0.9 * nrow(gpaData))) 
+
+# extract training set
+gpa_trainX <- gpa_norm[inTrain,]
+gpa_trainY <- gpaData[inTrain,1]
+
+# extract testing set
+gpa_testX <- gpa_norm[-inTrain,]
+gpa_testY <- gpaData[-inTrain,1]
+
+# run knnreg function
+numk <- 10
+
+for(k in 1:numk) {
+  
+  fit <- knnreg(gpa_trainX, gpa_trainY, k = k)
+
+# predict target values (response values) on the test set
+gpa_pred <- predict(fit, gpa_testX)
+
+# calculate the RMSE (Root Mean Square Error)
+gpa_rmse <- rmse(gpa_testY,gpa_pred)
+
+print(paste('RMSE of kNNreg with k = ',k,
+            ' on test set: ',gpa_rmse))
+  
+}
+
+
+```
+
+&nbsp;
+
+$\bullet$ Neural network at least three different architectures (include one hidden layer with 5 hidden nodes). Display the neural networks in your report.
+
+```{r}
+# normalize columns of the dataset
+gpa_norm <- as.data.frame(lapply(gpaData, nor))
+
+# Randomly select 90% of the indices (rows) of the 
+# dataset. This will be the indices of the training set
+set.seed(1) # set random seed 
+inTrain <- sample(1:nrow(gpaData), floor(0.9 * nrow(gpaData))) 
+
+# extract training set
+gpa_traindata <- gpa_norm[inTrain,]
+
+# extract testing set
+gpa_testdata <- gpa_norm[-inTrain,]
+
+
+# train neural net with one hidden layer with
+# 5 hidden nodes
+hiddenlayerstruc <- 5
+NN <- neuralnet(GPA~HSGPA+SATV+
+        SATM,
+        gpa_traindata, hidden = hiddenlayerstruc,
+        linear.output = T)
+
+# plot the neural net the "best" is required as it won't render on HTML for some reason
+plot(NN, rep = "best")
+
+# predict output on the test set
+gpa_pred <- predict(NN, gpa_testdata[,2:4])
+
+
+# scale the predictions back to the original scale
+MinCollegeGPA<-min(gpaData[,1])
+MaxCollegeGPA<-max(gpaData[,1])
+gpa_pred_origscale <-origscale(gpa_pred,
+          MinCollegeGPA,MaxCollegeGPA)
+
+gpa_rmse <- rmse(gpaData[-inTrain,1],gpa_pred_origscale)
+
+cat('RMSE of Neural Network with (',hiddenlayerstruc,
+    ') hidden nodes on test set: ',gpa_rmse,'\n')
+
+
+
+# train neural net with two hidden layer with
+# 3 hidden nodes
+hiddenlayerstruc <- c(3,3)
+NN <- neuralnet(GPA~HSGPA+SATV+
+        SATM,
+        gpa_traindata, hidden = hiddenlayerstruc,
+        linear.output = T)
+
+# plot the neural net
+plot(NN, rep = "best")
+
+# predict output on the test set
+gpa_pred <- predict(NN, gpa_testdata[,2:4])
+
+
+# scale the predictions back to the original scale
+MinCollegeGPA<-min(gpaData[,1])
+MaxCollegeGPA<-max(gpaData[,1])
+gpa_pred_origscale <-origscale(gpa_pred,
+          MinCollegeGPA,MaxCollegeGPA)
+
+gpa_rmse <- rmse(gpaData[-inTrain,1],gpa_pred_origscale)
+
+cat('RMSE of Neural Network with (',hiddenlayerstruc,
+    ') hidden nodes on test set: ',gpa_rmse,'\n')
+
+
+
+
+# train neural net with two hidden layers with
+# 5 hidden nodes
+hiddenlayerstruc <- c(5,5)
+NN <- neuralnet(GPA~HSGPA+SATV+
+        SATM,
+        gpa_traindata, hidden = hiddenlayerstruc,
+        linear.output = T)
+
+# plot the neural net
+plot(NN, rep = "best")
+
+# predict output on the test set
+gpa_pred <- predict(NN, gpa_testdata[,2:4])
+
+
+# scale the predictions back to the original scale
+MinCollegeGPA<-min(gpaData[,1])
+MaxCollegeGPA<-max(gpaData[,1])
+gpa_pred_origscale <-origscale(gpa_pred,
+          MinCollegeGPA,MaxCollegeGPA)
+
+gpa_rmse <- rmse(gpaData[-inTrain,1],gpa_pred_origscale)
+
+cat('RMSE of Neural Network with (',hiddenlayerstruc,
+    ') hidden nodes on test set: ',gpa_rmse,'\n')
+
+```
+
+&nbsp;
+
+$\bullet$ (extra credit) Decision tree. Display the tree in your report.
+
+```{r}
+# Randomly select 90% of the indices (rows) of the 
+# dataset. This will be the indices of the training set
+set.seed(1) # set random seed 
+
+inTrain <- sample(1:nrow(gpaData), 0.9 * nrow(gpaData)) 
+
+# extract training set
+gpa_traindata <- gpaData[inTrain,]
+
+# extract testing set
+gpa_testdata <- gpaData[-inTrain,]
+
+# build regression tree to predict gpa 
+# using our predictors
+tree.gpa <- tree(GPA~HSGPA+SATM+SATV,gpa_traindata)
+
+# plot the tree
+plot(tree.gpa)
+
+# display the node labels
+text(tree.gpa)
+
+# predict output on the test set
+gpa_pred <- predict(tree.gpa, gpa_testdata)
+gpa_rmse <- rmse(gpa_testdata[,1],gpa_pred)
+
+cat('RMSE of Regression Tree with on test set: ',gpa_rmse)
+```
+
+&nbsp;
+
+State your conclusion on which methods work well on your data set.
+
+*From our various methods of research, we found that our scatterplots show a positive relationship between all 3 of our predictors which suggests that they do indeed affect first year college GPA. Upon further investigation, our predictors were found to be suitable given the residual plot and hypothesis tests that suggest that all 3 of our predictors were good predictors for this data set. Given all of our methods, the lowest RMSE we found was knn at k=3 being 0.327532865187263, but the decision tree wasn't too far off either with an RMSE of 0.3435008*
